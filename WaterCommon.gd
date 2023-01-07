@@ -18,7 +18,8 @@ const BOX_CAPACITY_NUM = 4 # 最大4つまで.
 const INVALID_BOX_IDX = -1 # 無効とする箱番号.
 
 enum eColor {
-	BLACK,
+	NONE, # 無効な色.
+	
 	RED,
 	ORANGE,
 	YELLOW,

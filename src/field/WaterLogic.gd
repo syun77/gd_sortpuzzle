@@ -1,5 +1,3 @@
-extends Node
-
 class_name WaterLogic
 
 ## タイルオブジェクト.
@@ -98,12 +96,24 @@ class MyBox:
 		return _selected
 	func set_selected(b:bool) -> void:
 		_selected = b
+	
+	func count_tile() -> int:
+		return _stack.size()
+	
+	func get_tile(pos:int) -> MyTile:
+		if pos < 0 or count_tile() <= pos:
+			return null
+		return _stack[pos]
 
 # ----------------------------------------------
 # vars.
 # ----------------------------------------------
 var _box_list = []
+var _selected_box = WaterCommon.INVALID_BOX_IDX # 選んでいる箱.
 
+# ----------------------------------------------
+# public functions.
+# ----------------------------------------------
 ## 生成.
 func create(fill_cnt:int, empty_cnt:int) -> void:
 	var tbl = []
@@ -129,7 +139,6 @@ func create(fill_cnt:int, empty_cnt:int) -> void:
 		var tile = MyTile.new()
 		tile.setup(box_idx, tile_idx, v)
 		box.push(tile)
-		add_child(tile)
 
 	# 空の容器を作っておく.
 	box_idx += 1
@@ -138,3 +147,138 @@ func create(fill_cnt:int, empty_cnt:int) -> void:
 		box.setup(box_idx)
 		_box_list.append(box)
 		box_idx += 1
+
+## 更新.]
+func update(box_idx:int, data:ReplayData) -> bool:
+	var ret = false # 入れ替えできたかどうか.
+	
+	# 2箇所選択したら入れ替える.
+	if _check_swap_box(_selected_box, box_idx):
+		# 入れ替え実行.
+		data.count = _swap_box(_selected_box, box_idx)
+		
+		# 返却用データの設定.
+		data.src_box = _selected_box
+		data.dst_box = box_idx
+		ret = true
+		
+		# 入れ替えできたら非選択にする.
+		box_idx = WaterCommon.INVALID_BOX_IDX
+
+	# 箱の選択状態の更新.
+	if _update_box_select(box_idx):
+		_selected_box = box_idx
+	else:
+		# 選択できなかった.
+		_selected_box = WaterCommon.INVALID_BOX_IDX
+	
+	return ret
+
+# ----------------------------------------------
+# private functions.
+# ----------------------------------------------
+## 交換可能かどうか.
+func _check_swap_box(src_idx:int, dst_idx:int) -> bool:
+	if src_idx == WaterCommon.INVALID_BOX_IDX or dst_idx == WaterCommon.INVALID_BOX_IDX:
+		return false # どちらかが無効の場合は交換できない.
+
+	if src_idx == dst_idx:
+		return false # 同じ場合も交換できない.
+	
+	var src_box:MyBox = _box_list[src_idx]
+	var dst_box:MyBox = _box_list[dst_idx]
+
+	if src_box.empty():
+		return false # 空なので移動できない.
+	
+	if dst_box.empty():
+		# 移動先が空なら無条件で移動可能.
+		return true
+	
+	if dst_box.full():
+		return false # 一杯なので移動不可.
+	
+	var src_color = src_box.top_color()
+	var dst_color = dst_box.top_color()
+	if src_color != dst_color:
+		return false # 色が誓う.
+
+	# 交換できる.
+	return true
+
+## 交換を実行する.
+## @return 移動した数.
+func _swap_box(src_idx:int, dst_idx:int) -> int:
+	var ret = 0
+	
+	var src_box:MyBox = _box_list[src_idx]
+	var dst_box:MyBox = _box_list[dst_idx]
+	
+	while true:
+		var src_tile = src_box.pop()
+		var dst_color = dst_box.top_color()
+		if dst_box.empty() == false:
+			# 移動先が空でない.
+			if src_tile.get_color() != dst_color:
+				# 違う色になったので終了.
+				# 戻しておきます.
+				src_box.push(src_tile)
+				break
+		
+		# 移動先に追加.
+		dst_box.push(src_tile)
+		ret += 1
+		
+		if src_box.empty():
+			break # 空になったので終了.
+		if dst_box.full():
+			break # 一杯になったので終了.
+	
+	return ret
+
+## 更新 > 箱の選択
+## @return 選択できたらtrue
+func _update_box_select(box_idx:int) -> bool:
+	var ret = false
+	
+	for box in _box_list:
+		if box.get_idx() == box_idx:
+			if box.is_selected():
+				box.set_selected(false) # すでに選択していたら解除.
+			else:
+				box.set_selected(true) # 選択している.
+				ret = true # 選択できた.
+		else:
+			box.set_selected(false)
+	
+	return ret	
+# ----------------------------------------------
+# properties.
+# ----------------------------------------------
+func get_selected_box() -> int:
+	return _selected_box
+
+func count_box() -> int:
+	return _box_list.size()
+
+func get_box(idx:int) -> MyBox:
+	if idx < 0 or count_box() <= idx:
+		return null
+	return _box_list[idx]
+
+func count_tile(idx:int) -> int:
+	var box:MyBox = get_box(idx)
+	if box == null:
+		return 0
+	return box.count_tile()
+
+func get_tile_color(box_idx:int, tile_pos:int) -> int:
+	var box:MyBox = get_box(box_idx)
+	if box == null:
+		return WaterCommon.eColor.NONE # 無効.
+	
+	if tile_pos < 0 or box.count_tile() <= tile_pos:
+		return WaterCommon.eColor.NONE # 無効.
+
+	var tile:MyTile = box.get_tile(tile_pos)
+	return tile.get_color()

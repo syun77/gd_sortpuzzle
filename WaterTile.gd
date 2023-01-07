@@ -40,7 +40,7 @@ func move(box_idx:int, tile_pos:int) -> void:
 ## 色を取得する.
 func _get_color() -> Color:
 	match _color:
-		WaterCommon.eColor.BLACK:
+		WaterCommon.eColor.NONE:
 			return Color.black
 		WaterCommon.eColor.RED:
 			return Color.red

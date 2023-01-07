@@ -12,14 +12,14 @@ _global_script_classes=[ {
 "base": "Reference",
 "class": "ReplayData",
 "language": "GDScript",
-"path": "res://src/reply/ReplayData.gd"
+"path": "res://src/replay/ReplayData.gd"
 }, {
 "base": "Reference",
 "class": "ReplayMgr",
 "language": "GDScript",
-"path": "res://src/reply/ReplayMgr.gd"
+"path": "res://src/replay/ReplayMgr.gd"
 }, {
-"base": "Node",
+"base": "Reference",
 "class": "WaterLogic",
 "language": "GDScript",
 "path": "res://src/field/WaterLogic.gd"
