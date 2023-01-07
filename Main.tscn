@@ -14,4 +14,28 @@ margin_bottom = 564.0
 theme = ExtResource( 2 )
 text = "やり直し"
 
+[node name="ButtonNextGame" type="Button" parent="."]
+margin_left = 224.0
+margin_top = 512.0
+margin_right = 364.0
+margin_bottom = 564.0
+theme = ExtResource( 2 )
+text = "次のゲーム"
+
+[node name="LabelSeed" type="Label" parent="."]
+margin_left = 672.0
+margin_top = 544.0
+margin_right = 924.0
+margin_bottom = 590.0
+theme = ExtResource( 2 )
+text = "Seed:"
+
+[node name="SpinBox" type="SpinBox" parent="LabelSeed"]
+margin_left = 96.0
+margin_top = -8.0
+margin_right = 344.0
+margin_bottom = 48.0
+max_value = 1e+10
+
 [connection signal="pressed" from="ButtonRetry" to="." method="_on_ButtonRetry_pressed"]
+[connection signal="pressed" from="ButtonNextGame" to="." method="_on_ButtonNextGame_pressed"]

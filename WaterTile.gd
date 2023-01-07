@@ -3,27 +3,16 @@ extends Node2D
 # タイルオブジェクト.
 # =================================
 
-class_name Tile
+class_name WaterTile
 
 # ---------------------------------
 # consts.
 # ---------------------------------
-enum eColor {
-	BLACK,
-	RED,
-	ORANGE,
-	YELLOW,
-	GREEN,
-	LIME,
-	AQUA,
-	PURPLE,
-	BLUE,
-}
 
 # ---------------------------------
 # vars.
 # ---------------------------------
-var _color = eColor.RED
+var _color = WaterCommon.eColor.RED
 var _box_idx = 0
 var _tile_pos = 0 # タイルの位置.
 
@@ -51,23 +40,23 @@ func move(box_idx:int, tile_pos:int) -> void:
 ## 色を取得する.
 func _get_color() -> Color:
 	match _color:
-		eColor.BLACK:
+		WaterCommon.eColor.BLACK:
 			return Color.black
-		eColor.RED:
+		WaterCommon.eColor.RED:
 			return Color.red
-		eColor.ORANGE:
+		WaterCommon.eColor.ORANGE:
 			return Color.orange
-		eColor.YELLOW:
+		WaterCommon.eColor.YELLOW:
 			return Color.yellow
-		eColor.GREEN:
+		WaterCommon.eColor.GREEN:
 			return Color.green
-		eColor.LIME:
+		WaterCommon.eColor.LIME:
 			return Color.lime
-		eColor.AQUA:
+		WaterCommon.eColor.AQUA:
 			return Color.aqua
-		eColor.PURPLE:
+		WaterCommon.eColor.PURPLE:
 			return Color.purple
-		eColor.BLUE:
+		WaterCommon.eColor.BLUE:
 			return Color.blue 
 		_:
 			return Color.white
@@ -78,7 +67,7 @@ func _process(delta: float) -> void:
 	
 func _draw() -> void:
 	var color = _get_color()
-	var px = Common.get_tile_x(_box_idx, _tile_pos)
-	var py = Common.get_tile_y(_box_idx, _tile_pos)
-	var rect = Rect2(px, py, Common.TILE_WIDTH, Common.TILE_HEIGHT)
+	var px = WaterCommon.get_tile_x(_box_idx, _tile_pos)
+	var py = WaterCommon.get_tile_y(_box_idx, _tile_pos)
+	var rect = Rect2(px, py, WaterCommon.TILE_WIDTH, WaterCommon.TILE_HEIGHT)
 	draw_rect(rect, color)

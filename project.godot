@@ -9,19 +9,37 @@
 config_version=4
 
 _global_script_classes=[ {
-"base": "Node2D",
-"class": "Tile",
+"base": "Reference",
+"class": "ReplayData",
 "language": "GDScript",
-"path": "res://Tile.gd"
+"path": "res://src/reply/ReplayData.gd"
+}, {
+"base": "Reference",
+"class": "ReplayMgr",
+"language": "GDScript",
+"path": "res://src/reply/ReplayMgr.gd"
+}, {
+"base": "Node",
+"class": "WaterLogic",
+"language": "GDScript",
+"path": "res://src/field/WaterLogic.gd"
+}, {
+"base": "Node2D",
+"class": "WaterTile",
+"language": "GDScript",
+"path": "res://WaterTile.gd"
 }, {
 "base": "Area2D",
-"class": "TileBox",
+"class": "WaterTileBox",
 "language": "GDScript",
-"path": "res://TileBox.gd"
+"path": "res://WaterTileBox.gd"
 } ]
 _global_script_class_icons={
-"Tile": "",
-"TileBox": ""
+"ReplayData": "",
+"ReplayMgr": "",
+"WaterLogic": "",
+"WaterTile": "",
+"WaterTileBox": ""
 }
 
 [application]
@@ -32,7 +50,7 @@ config/icon="res://icon.png"
 
 [autoload]
 
-Common="*res://Common.gd"
+WaterCommon="*res://WaterCommon.gd"
 
 [gui]
 
