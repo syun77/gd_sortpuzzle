@@ -6,7 +6,9 @@
 [node name="Main" type="Node2D"]
 script = ExtResource( 1 )
 
-[node name="ButtonRetry" type="Button" parent="."]
+[node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="ButtonRetry" type="Button" parent="UILayer"]
 margin_left = 16.0
 margin_top = 512.0
 margin_right = 156.0
@@ -14,28 +16,44 @@ margin_bottom = 564.0
 theme = ExtResource( 2 )
 text = "やり直し"
 
-[node name="ButtonNextGame" type="Button" parent="."]
-margin_left = 224.0
+[node name="ButtonNextGame" type="Button" parent="UILayer"]
+margin_left = 176.0
 margin_top = 512.0
-margin_right = 364.0
+margin_right = 348.0
 margin_bottom = 564.0
 theme = ExtResource( 2 )
 text = "次のゲーム"
 
-[node name="LabelSeed" type="Label" parent="."]
+[node name="LabelSeed" type="Label" parent="UILayer"]
 margin_left = 672.0
-margin_top = 544.0
+margin_top = 512.0
 margin_right = 924.0
-margin_bottom = 590.0
+margin_bottom = 558.0
 theme = ExtResource( 2 )
 text = "Seed:"
 
-[node name="SpinBox" type="SpinBox" parent="LabelSeed"]
+[node name="SpinBox" type="SpinBox" parent="UILayer/LabelSeed"]
 margin_left = 96.0
-margin_top = -8.0
 margin_right = 344.0
-margin_bottom = 48.0
+margin_bottom = 56.0
 max_value = 1e+10
 
-[connection signal="pressed" from="ButtonRetry" to="." method="_on_ButtonRetry_pressed"]
-[connection signal="pressed" from="ButtonNextGame" to="." method="_on_ButtonNextGame_pressed"]
+[node name="LabelStep" type="Label" parent="UILayer"]
+margin_left = 672.0
+margin_top = 456.0
+margin_right = 782.0
+margin_bottom = 502.0
+theme = ExtResource( 2 )
+text = "Step: 1"
+
+[node name="ButtonUndo" type="Button" parent="UILayer"]
+margin_left = 368.0
+margin_top = 512.0
+margin_right = 467.0
+margin_bottom = 564.0
+theme = ExtResource( 2 )
+text = "UNDO"
+
+[connection signal="pressed" from="UILayer/ButtonRetry" to="." method="_on_ButtonRetry_pressed"]
+[connection signal="pressed" from="UILayer/ButtonNextGame" to="." method="_on_ButtonNextGame_pressed"]
+[connection signal="pressed" from="UILayer/ButtonUndo" to="." method="_on_ButtonUndo_pressed"]

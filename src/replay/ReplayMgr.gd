@@ -32,5 +32,11 @@ func count_undo() -> int:
 
 ## undoを実行する.
 func undo() -> void:
-	pass # TODO: 未実装.
-
+	if count_undo() <= 0:
+		return
+	
+	# リプレイデータを取り出す.
+	var data = undo_list.pop_back()
+	
+	# UNDOを実行.
+	WaterLogic.undo(data)

@@ -1,7 +1,13 @@
-class_name WaterLogic
+extends Node
+
+# ==============================================
+# ソートパズルのロジック.
+# ==============================================
+#class_name WaterLogic
 
 ## タイルオブジェクト.
 class MyTile:
+	var _uid = 0 # ユニークID.
 	var _box_idx = 0 # 箱番号.
 	var _tile_pos = 0 # 箱内の位置.
 	var _color = 0 # タイルの色.
@@ -22,6 +28,11 @@ class MyTile:
 		return _tile_pos
 	func get_color() -> int:
 		return _color
+		
+	func set_uid(uid:int) -> void:
+		_uid = uid
+	func get_uid() -> int:
+		return _uid
 		
 ## MyTileを入れる箱.
 class MyBox:
@@ -104,18 +115,26 @@ class MyBox:
 		if pos < 0 or count_tile() <= pos:
 			return null
 		return _stack[pos]
-
 # ----------------------------------------------
 # vars.
 # ----------------------------------------------
 var _box_list = []
+var _tile_dict = {} # タイルへのアクセス用.
 var _selected_box = WaterCommon.INVALID_BOX_IDX # 選んでいる箱.
 
 # ----------------------------------------------
 # public functions.
 # ----------------------------------------------
+## 初期化.
+func init() -> void:
+	_box_list = []
+	_selected_box = WaterCommon.INVALID_BOX_IDX
+
 ## 生成.
 func create(fill_cnt:int, empty_cnt:int) -> void:
+	# 初期化.
+	init()
+	
 	var tbl = []
 	for j in range(fill_cnt):
 		for i in range(WaterCommon.BOX_CAPACITY_NUM):
@@ -272,13 +291,50 @@ func count_tile(idx:int) -> int:
 		return 0
 	return box.count_tile()
 
-func get_tile_color(box_idx:int, tile_pos:int) -> int:
+func get_tile(box_idx:int, tile_pos:int) -> MyTile:
 	var box:MyBox = get_box(box_idx)
 	if box == null:
-		return WaterCommon.eColor.NONE # 無効.
+		return null
 	
 	if tile_pos < 0 or box.count_tile() <= tile_pos:
-		return WaterCommon.eColor.NONE # 無効.
+		return null
 
 	var tile:MyTile = box.get_tile(tile_pos)
+	return tile
+
+func get_tile_color(box_idx:int, tile_pos:int) -> int:
+	var tile:MyTile = get_tile(box_idx, tile_pos)
+	if tile == null:
+		return WaterCommon.eColor.NONE # 無効.
 	return tile.get_color()
+
+## タイルのUIDを登録する.
+func register_tile_uid(box_idx:int, tile_pos:int, uid:int) -> void:
+	var tile:MyTile = get_tile(box_idx, tile_pos)
+	if tile == null:
+		push_error(str("無効なタイルを指定 box_idx:", box_idx, " tile_pos:", tile_pos))
+		return
+
+	tile.set_uid(uid)
+	# UIDで登録.
+	_tile_dict[uid] = tile
+
+func get_tile_uid(box_idx:int, tile_pos:int) -> int:
+	var tile:MyTile = get_tile(box_idx, tile_pos)
+	if tile == null:
+		return 0
+	
+	return tile.get_uid()
+
+## UID指定でタイル情報を取得する.
+func get_tile_from_uid(uid:int) -> MyTile:
+	return _tile_dict[uid]
+
+## UNDOを実行.
+func undo(data:ReplayData) -> void:
+	var src_box:MyBox = _box_list[data.src_box]
+	var dst_box:MyBox = _box_list[data.dst_box]	
+	# 逆順に入れ替える.
+	for _i in range(data.count):
+		var tile:MyTile = dst_box.pop()
+		src_box.push(tile)

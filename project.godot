@@ -19,11 +19,6 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://src/replay/ReplayMgr.gd"
 }, {
-"base": "Reference",
-"class": "WaterLogic",
-"language": "GDScript",
-"path": "res://src/field/WaterLogic.gd"
-}, {
 "base": "Node2D",
 "class": "WaterTile",
 "language": "GDScript",
@@ -37,7 +32,6 @@ _global_script_classes=[ {
 _global_script_class_icons={
 "ReplayData": "",
 "ReplayMgr": "",
-"WaterLogic": "",
 "WaterTile": "",
 "WaterTileBox": ""
 }
@@ -51,6 +45,7 @@ config/icon="res://icon.png"
 [autoload]
 
 WaterCommon="*res://WaterCommon.gd"
+WaterLogic="*res://src/logic/WaterLogic.gd"
 
 [gui]
 
