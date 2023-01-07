@@ -34,8 +34,9 @@ text = "Seed:"
 
 [node name="SpinBox" type="SpinBox" parent="UILayer/LabelSeed"]
 margin_left = 96.0
+margin_top = -8.0
 margin_right = 344.0
-margin_bottom = 56.0
+margin_bottom = 48.0
 max_value = 1e+10
 
 [node name="LabelStep" type="Label" parent="UILayer"]
@@ -53,6 +54,16 @@ margin_right = 467.0
 margin_bottom = 564.0
 theme = ExtResource( 2 )
 text = "UNDO"
+
+[node name="LabelCaption" type="Label" parent="UILayer"]
+visible = false
+margin_left = 8.0
+margin_top = 168.0
+margin_right = 1032.0
+margin_bottom = 214.0
+theme = ExtResource( 2 )
+text = "COMPLETED!"
+align = 1
 
 [connection signal="pressed" from="UILayer/ButtonRetry" to="." method="_on_ButtonRetry_pressed"]
 [connection signal="pressed" from="UILayer/ButtonNextGame" to="." method="_on_ButtonNextGame_pressed"]

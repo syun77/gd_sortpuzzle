@@ -9,7 +9,10 @@ const TileObj = preload("res://WaterTile.tscn")
 # -------------------------------------------
 # consts.
 # -------------------------------------------
-
+enum eState {
+	MAIN,
+	COMPLETED,
+}
 
 # -------------------------------------------
 # onready.
@@ -17,14 +20,14 @@ const TileObj = preload("res://WaterTile.tscn")
 onready var _spinbox_seed = $UILayer/LabelSeed/SpinBox
 onready var _label_step = $UILayer/LabelStep
 onready var _btn_undo = $UILayer/ButtonUndo
+onready var _label_caption = $UILayer/LabelCaption
 
 # -------------------------------------------
 # vars.
 # -------------------------------------------
-var _replay_mgr:ReplayMgr = null
-
 var _box_list = []
 var _tile_list = []
+var _state = eState.MAIN
 
 # -------------------------------------------
 # private functions.
@@ -32,13 +35,17 @@ var _tile_list = []
 
 ## 開始.
 func _ready() -> void:	
-	_replay_mgr = ReplayMgr.new()
-	
+	ReplayMgr.reset()
 	WaterCommon.new_game_rnd() # 乱数を初期化.
 	# シード値を入れる.
 	_spinbox_seed.value = WaterCommon.get_seed()
 
 	WaterLogic.create(4, 1)
+	if WaterLogic.can_resolve():
+		print("[クリア可能]")
+	else:
+		print("[クリア不可能]")
+	ReplayMgr.reset()
 	
 	# logicを元にゲームオブジェクトを生成する.
 	for i in range(WaterLogic.count_box()):
@@ -60,6 +67,16 @@ func _ready() -> void:
 
 ## 更新.
 func _process(delta: float) -> void:
+	match _state:
+		eState.MAIN:
+			_update_main(delta)
+		eState.COMPLETED:
+			_update_completed(delta)
+	
+	_update_ui(delta)
+
+## 更新 > メイン.
+func _update_main(_delta:float) -> void:
 	if Input.is_action_just_pressed("ui_click"):
 		# 箱の選択.
 		var box_idx = _focus_box()
@@ -67,9 +84,17 @@ func _process(delta: float) -> void:
 		if WaterLogic.update(box_idx, data):
 			# 入れ替えできたので表示の更新が必要.
 			# UNDOに追加.
-			_replay_mgr.add_undo(data)
 			print(data)
+			ReplayMgr.add_undo(data)
 			_copy_from_logic()
+			
+			print_debug("*Swap Point*")
+			var ret = WaterLogic.search_swap_point()
+			for d in ret:
+				print(d)
+			
+			if WaterLogic.check_completed():
+				_state = eState.COMPLETED
 		
 		# 選択カーソルの更新.
 		box_idx = WaterLogic.get_selected_box()
@@ -81,9 +106,10 @@ func _process(delta: float) -> void:
 					box.set_selected(true) # 選択している.
 			else:
 				box.set_selected(false)
-	
-	_update_ui(delta)
 
+## 更新 > 完了.
+func _update_completed(_delta:float) -> void:
+	_label_caption.visible = true
 
 ## マウスの位置にある箱を取得する.
 func _focus_box() -> int:
@@ -115,7 +141,7 @@ func _copy_from_logic() -> void:
 
 ## 更新 > UI.
 func _update_ui(_delta:float) -> void:
-	var cnt_undo = _replay_mgr.count_undo()
+	var cnt_undo = ReplayMgr.count_undo()
 	_label_step.visible = (cnt_undo > 0)
 	_label_step.text = "Step:%d"%cnt_undo
 
@@ -135,6 +161,6 @@ func _on_ButtonNextGame_pressed() -> void:
 
 ## UNDOの実行.
 func _on_ButtonUndo_pressed() -> void:
-	_replay_mgr.undo()
+	ReplayMgr.undo()
 	# Logicからコピーする.
 	_copy_from_logic()

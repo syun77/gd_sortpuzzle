@@ -17,6 +17,13 @@ class MyTile:
 		_box_idx = box_idx
 		_tile_pos = tile_pos
 		_color = color
+		
+	## コピー.
+	func copy(src:MyTile) -> void:
+		_uid = src.get_uid()
+		_box_idx = src.get_box_idx()
+		_tile_pos = src.get_tile_pos()
+		_color = src.get_color()
 	
 	func move(box_idx:int, tile_pos:int) -> void:
 		_box_idx = box_idx
@@ -43,6 +50,13 @@ class MyBox:
 	## セットアップ.
 	func setup(idx:int) -> void:
 		_idx = idx
+	
+	## コピー.
+	func copy(src:MyBox) -> void:
+		for d in src._stack:
+			var d2 = MyTile.new()
+			d2.copy(d)
+			_stack.append(d2)
 
 	func get_idx() -> int:
 		return _idx
@@ -119,6 +133,7 @@ class MyBox:
 # vars.
 # ----------------------------------------------
 var _box_list = []
+var _active_box_list = null
 var _tile_dict = {} # タイルへのアクセス用.
 var _selected_box = WaterCommon.INVALID_BOX_IDX # 選んでいる箱.
 
@@ -167,7 +182,7 @@ func create(fill_cnt:int, empty_cnt:int) -> void:
 		_box_list.append(box)
 		box_idx += 1
 
-## 更新.]
+## 更新.
 func update(box_idx:int, data:ReplayData) -> bool:
 	var ret = false # 入れ替えできたかどうか.
 	
@@ -175,6 +190,7 @@ func update(box_idx:int, data:ReplayData) -> bool:
 	if _check_swap_box(_selected_box, box_idx):
 		# 入れ替え実行.
 		data.count = _swap_box(_selected_box, box_idx)
+		data.tiles = to_tiles()
 		
 		# 返却用データの設定.
 		data.src_box = _selected_box
@@ -193,6 +209,99 @@ func update(box_idx:int, data:ReplayData) -> bool:
 	
 	return ret
 
+## すべてのタイル情報を文字列として取得する
+func to_tiles() -> String:
+	var ret = ""
+	var box_list = _get_active_box_list()
+	for box in box_list:
+		var cnt = box.count_tile()
+		for i in range(WaterCommon.BOX_CAPACITY_NUM):
+			if i >= cnt:
+				ret += "0"
+				continue
+			var tile:MyTile = box.get_tile(i)
+			ret += "%d"%tile.get_color()
+	
+	return ret
+
+## 完了したかどうか.
+func check_completed() -> bool:
+	var box_list = _get_active_box_list()
+	
+	for box in box_list:
+		if box.empty():
+			continue # 空の箱は判定不要.
+		var cnt = box.count_tile()
+		if cnt < WaterCommon.BOX_CAPACITY_NUM:
+			return false # 一杯になっていない箱がある.
+		
+		var color = WaterCommon.eColor.NONE
+		for i in range(cnt):
+			var tile:MyTile = box.get_tile(i)
+			if i == 0:
+				color = tile.get_color()
+				continue
+			if tile.get_color() != color:
+				return false # 異なる色が1つの箱に入っている.
+	
+	# すべて完了した.
+	return true
+
+## クリア可能かどうか.
+func can_resolve() -> bool:
+	# まずはコピーする.
+	var box_list = []
+	for src_box in _box_list:
+		var box = MyBox.new()
+		box.copy(src_box)
+		box_list.append(box)
+	
+	# アクティブに設定する.
+	_active_box_list = box_list
+
+	var depth = 0
+	var swap_points = search_swap_point()
+	for d in swap_points:
+		if _can_resolve_sub(box_list, d, depth):
+			_active_box_list = null # 消しておく.
+			return true
+	
+	_active_box_list = null # 消しておく.
+	return false
+
+func _can_resolve_sub(box_list, d:ReplayData, depth:int) -> bool:
+	depth += 1
+	if _check_swap_box(d.src_box, d.dst_box):
+		# 交換実行.
+		var data = ReplayData.new()
+		data.src_box = d.src_box
+		data.dst_box = d.dst_box
+		data.count = _swap_box(d.src_box, d.dst_box)
+		data.tiles = to_tiles()
+		#print(depth, " ", data)
+		
+		var dont_check = false
+		if ReplayMgr.has_same_tiles(data):
+			dont_check = true # チェック不要.
+		
+		ReplayMgr.add_undo(data)
+		if dont_check:
+			# これ以上の探索不要.
+			ReplayMgr.undo() # クリアできないので1つ戻す.
+			return false
+		
+		if check_completed():
+			return true # クリアできた.
+
+		# 次の入れ替えポイントを探す.
+		var swap_points = search_swap_point()
+		for d2 in swap_points:
+			if _can_resolve_sub(box_list, d2, depth):
+				return true # クリアできた.
+				
+	ReplayMgr.undo() # クリアできないので1つ戻す.
+	return false
+
 # ----------------------------------------------
 # private functions.
 # ----------------------------------------------
@@ -204,8 +313,10 @@ func _check_swap_box(src_idx:int, dst_idx:int) -> bool:
 	if src_idx == dst_idx:
 		return false # 同じ場合も交換できない.
 	
-	var src_box:MyBox = _box_list[src_idx]
-	var dst_box:MyBox = _box_list[dst_idx]
+	var box_list = _get_active_box_list()
+	
+	var src_box:MyBox = box_list[src_idx]
+	var dst_box:MyBox = box_list[dst_idx]
 
 	if src_box.empty():
 		return false # 空なので移動できない.
@@ -230,8 +341,10 @@ func _check_swap_box(src_idx:int, dst_idx:int) -> bool:
 func _swap_box(src_idx:int, dst_idx:int) -> int:
 	var ret = 0
 	
-	var src_box:MyBox = _box_list[src_idx]
-	var dst_box:MyBox = _box_list[dst_idx]
+	var box_list = _get_active_box_list()
+	
+	var src_box:MyBox = box_list[src_idx]
+	var dst_box:MyBox = box_list[dst_idx]
 	
 	while true:
 		var src_tile = src_box.pop()
@@ -260,7 +373,7 @@ func _swap_box(src_idx:int, dst_idx:int) -> int:
 func _update_box_select(box_idx:int) -> bool:
 	var ret = false
 	
-	for box in _box_list:
+	for box in _get_active_box_list():
 		if box.get_idx() == box_idx:
 			if box.is_selected():
 				box.set_selected(false) # すでに選択していたら解除.
@@ -270,7 +383,12 @@ func _update_box_select(box_idx:int) -> bool:
 		else:
 			box.set_selected(false)
 	
-	return ret	
+	return ret
+	
+func _get_active_box_list():
+	if _active_box_list != null:
+		return _active_box_list
+	return _box_list
 # ----------------------------------------------
 # properties.
 # ----------------------------------------------
@@ -332,9 +450,31 @@ func get_tile_from_uid(uid:int) -> MyTile:
 
 ## UNDOを実行.
 func undo(data:ReplayData) -> void:
-	var src_box:MyBox = _box_list[data.src_box]
-	var dst_box:MyBox = _box_list[data.dst_box]	
+	var box_list = _get_active_box_list()
+	
+	var src_box:MyBox = box_list[data.src_box]
+	var dst_box:MyBox = box_list[data.dst_box]	
 	# 逆順に入れ替える.
 	for _i in range(data.count):
 		var tile:MyTile = dst_box.pop()
 		src_box.push(tile)
+
+## 交換可能な場所を返す
+func search_swap_point():
+	var box_list = _get_active_box_list()
+	
+	var ret = []
+	for i in range(box_list.size()):
+		for j in range(box_list.size()):
+			if i == j:
+				continue # 同じ場所は交換できない.
+			if _check_swap_box(i, j) == false:
+				continue # 交換できない
+			
+			# 交換可能.
+			var d = ReplayData.new()
+			d.src_box = i
+			d.dst_box = j
+			ret.append(d)
+	
+	return ret

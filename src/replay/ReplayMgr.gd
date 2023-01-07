@@ -1,7 +1,9 @@
+extends Node
+
 # =============================
 # リプレイ管理.
 # =============================
-class_name ReplayMgr
+#class_name ReplayMgr
 
 # -----------------------------
 # vars.
@@ -40,3 +42,16 @@ func undo() -> void:
 	
 	# UNDOを実行.
 	WaterLogic.undo(data)
+
+## 過去に同じタイル情報があるかどうか.
+func has_same_tiles(d:ReplayData) -> bool:
+	# 逆順にする.
+	var tmp = []
+	for d2 in undo_list:
+		tmp.push_front(d2)
+	
+	for d2 in tmp:
+		if d2.tiles == d.tiles:
+			return true # 同じデータが見つかった。
+	
+	return false
