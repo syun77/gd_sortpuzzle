@@ -73,6 +73,7 @@ func _create() -> bool:
 		print("問題を生成:%d"%(_i+1))
 		WaterLogic.create(4, 1)
 		# クリア可能かどうか判定。内部でリプレイデータを使う
+		#if true:
 		if WaterLogic.can_resolve():
 			print("[クリア可能]")
 			ret = true

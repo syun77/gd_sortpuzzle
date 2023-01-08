@@ -81,6 +81,15 @@ class MyBox:
 		if _stack.size() >= WaterCommon.BOX_CAPACITY_NUM:
 			return true # 満タン.
 		return false
+	
+	func completed() -> bool:
+		if full() == false:
+			return false
+		var color = _stack[0].get_color()
+		for tile in _stack:
+			if color != tile.get_color():
+				return false # 違い色が存在する.
+		return true # すべて同じ色.
 		
 	func push(tile:MyTile) -> void:
 		if can_push() == false:
@@ -232,19 +241,9 @@ func check_completed() -> bool:
 	
 	for box in box_list:
 		if box.empty():
-			continue # 空の箱は判定不要.
-		var cnt = box.count_tile()
-		if cnt < WaterCommon.BOX_CAPACITY_NUM:
-			return false # 一杯になっていない箱がある.
-		
-		var color = WaterCommon.eColor.NONE
-		for i in range(cnt):
-			var tile:MyTile = box.get_tile(i)
-			if i == 0:
-				color = tile.get_color()
-				continue
-			if tile.get_color() != color:
-				return false # 異なる色が1つの箱に入っている.
+			continue # 空の箱は除外.
+		if box.completed() == false:
+			return false # 異なる色が1つの箱に入っている.
 	
 	# すべて完了した.
 	return true
@@ -286,7 +285,7 @@ func _can_resolve_sub(box_list, d:ReplayData, depth:int) -> bool:
 		data.dst_box = d.dst_box
 		data.count = _swap_box(d.src_box, d.dst_box)
 		data.tiles = to_tiles()
-		print(depth, " ", data)
+		#print(depth, " ", data)
 		
 		var dont_check = false
 		if ReplayMgr.has_same_tiles(data):
@@ -473,9 +472,16 @@ func search_swap_point():
 	
 	var ret = []
 	for i in range(box_list.size()):
+		var src_box:MyBox = box_list[i]
+		if src_box.completed():
+			continue # 完了していたら除外.
+		
 		for j in range(box_list.size()):
 			if i == j:
 				continue # 同じ場所は交換できない.
+			var dst_box:MyBox = box_list[i]
+			if dst_box.completed():
+				continue # 完了していたら除外.
 			if _check_swap_box(i, j) == false:
 				continue # 交換できない
 			
