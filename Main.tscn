@@ -39,6 +39,40 @@ margin_right = 344.0
 margin_bottom = 48.0
 max_value = 1e+10
 
+[node name="LabelBox" type="Label" parent="UILayer"]
+margin_left = 688.0
+margin_top = 336.0
+margin_right = 940.0
+margin_bottom = 382.0
+theme = ExtResource( 2 )
+text = "Box:"
+
+[node name="SpinBox" type="SpinBox" parent="UILayer/LabelBox"]
+margin_left = 80.0
+margin_top = -8.0
+margin_right = 214.0
+margin_bottom = 48.0
+min_value = 3.0
+max_value = 7.0
+value = 3.0
+
+[node name="LabelEmpty" type="Label" parent="UILayer"]
+margin_left = 648.0
+margin_top = 400.0
+margin_right = 900.0
+margin_bottom = 446.0
+theme = ExtResource( 2 )
+text = "Empty:"
+
+[node name="SpinBox" type="SpinBox" parent="UILayer/LabelEmpty"]
+margin_left = 120.0
+margin_top = -8.0
+margin_right = 254.0
+margin_bottom = 48.0
+min_value = 1.0
+max_value = 2.0
+value = 1.0
+
 [node name="LabelStep" type="Label" parent="UILayer"]
 margin_left = 672.0
 margin_top = 456.0

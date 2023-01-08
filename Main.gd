@@ -18,6 +18,8 @@ enum eState {
 # onready.
 # -------------------------------------------
 onready var _spinbox_seed = $UILayer/LabelSeed/SpinBox
+onready var _spinbox_boxnum = $UILayer/LabelBox/SpinBox
+onready var _spinbox_emptynum = $UILayer/LabelEmpty/SpinBox
 onready var _label_step = $UILayer/LabelStep
 onready var _btn_undo = $UILayer/ButtonUndo
 onready var _label_caption = $UILayer/LabelCaption
@@ -35,6 +37,10 @@ var _state = eState.MAIN
 
 ## 開始.
 func _ready() -> void:	
+	# UIに反映.
+	_spinbox_boxnum.value = WaterCommon.box_num
+	_spinbox_emptynum.value	= WaterCommon.empty_num
+	
 	ReplayMgr.reset()
 	WaterCommon.new_game_rnd() # 乱数を初期化.
 	# シード値を入れる.
@@ -66,12 +72,15 @@ func _ready() -> void:
 func _create() -> bool:
 	var ret = false # クリア可能かどうか.
 	
+	var box_num = _spinbox_boxnum.value
+	var empty_num = _spinbox_emptynum.value
+	
 	# リトライ回数.
 	var cnt_retry = 10
 	for _i in range(cnt_retry):
 		# 問題を生成.
 		print("問題を生成:%d"%(_i+1))
-		WaterLogic.create(4, 1)
+		WaterLogic.create(box_num, empty_num)
 		# クリア可能かどうか判定。内部でリプレイデータを使う
 		#if true:
 		if WaterLogic.can_resolve():
@@ -170,6 +179,9 @@ func _update_ui(_delta:float) -> void:
 	var cnt_undo = ReplayMgr.count_undo()
 	_label_step.visible = (cnt_undo > 0)
 	_label_step.text = "Step:%d"%cnt_undo
+	
+	WaterCommon.box_num = _spinbox_boxnum.value
+	WaterCommon.empty_num = _spinbox_emptynum.value
 
 # ----------------------------------------
 # signals.
