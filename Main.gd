@@ -20,6 +20,7 @@ enum eState {
 onready var _spinbox_seed = $UILayer/LabelSeed/SpinBox
 onready var _spinbox_boxnum = $UILayer/LabelBox/SpinBox
 onready var _spinbox_emptynum = $UILayer/LabelEmpty/SpinBox
+onready var _checkbox_resolve = $UILayer/LabelResolve/CehckBox
 onready var _label_step = $UILayer/LabelStep
 onready var _btn_undo = $UILayer/ButtonUndo
 onready var _label_caption = $UILayer/LabelCaption
@@ -40,6 +41,7 @@ func _ready() -> void:
 	# UIに反映.
 	_spinbox_boxnum.value = WaterCommon.box_num
 	_spinbox_emptynum.value	= WaterCommon.empty_num
+	_checkbox_resolve.pressed = WaterCommon.check_resolve
 	
 	ReplayMgr.reset()
 	WaterCommon.new_game_rnd() # 乱数を初期化.
@@ -76,11 +78,15 @@ func _create() -> bool:
 	var empty_num = _spinbox_emptynum.value
 	
 	# リトライ回数.
-	var cnt_retry = 10
+	var cnt_retry = 1
 	for _i in range(cnt_retry):
 		# 問題を生成.
 		print("問題を生成:%d"%(_i+1))
 		WaterLogic.create(box_num, empty_num)
+		if WaterCommon.check_resolve == false:
+			ret = true # クリア可能としてしまう.
+			break
+		
 		# クリア可能かどうか判定。内部でリプレイデータを使う
 		#if true:
 		if WaterLogic.can_resolve():
@@ -96,6 +102,13 @@ func _create() -> bool:
 	# リプレイをリセット.
 	ReplayMgr.reset()
 	return ret
+
+## 問題生成2.
+func _create2() -> bool:
+	var box_num = _spinbox_boxnum.value
+	var empty_num = _spinbox_emptynum.value	
+	WaterLogic.create2(box_num, empty_num)
+	return true # 必ず解けるはず…
 
 ## 更新.
 func _process(delta: float) -> void:
@@ -182,6 +195,7 @@ func _update_ui(_delta:float) -> void:
 	
 	WaterCommon.box_num = _spinbox_boxnum.value
 	WaterCommon.empty_num = _spinbox_emptynum.value
+	WaterCommon.check_resolve = _checkbox_resolve.pressed
 
 # ----------------------------------------
 # signals.

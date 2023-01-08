@@ -13,6 +13,7 @@ class MyTile:
 	var _box_idx = 0 # 箱番号.
 	var _tile_pos = 0 # 箱内の位置.
 	var _color = 0 # タイルの色.
+	var _moved = false # 問題生成用の移動済みフラグ.
 
 	## セットアップ.
 	func setup(box_idx:int, tile_pos:int, color:int) -> void:
@@ -42,6 +43,11 @@ class MyTile:
 		_uid = uid
 	func get_uid() -> int:
 		return _uid
+	
+	func moved() -> bool:
+		return _moved
+	func set_moved(b:bool) -> void:
+		_moved = b
 		
 ## MyTileを入れる箱.
 class MyBox:
@@ -120,6 +126,11 @@ class MyBox:
 			ret.append(tile)
 		
 		return ret
+	
+	func top() -> MyTile:
+		if empty():
+			return null
+		return _stack.back()
 
 	func top_color() -> int:
 		if empty():
@@ -193,6 +204,98 @@ func create(fill_cnt:int, empty_cnt:int) -> void:
 		_box_list.append(box)
 		box_idx += 1
 
+## 生成2.
+func create2(fill_cnt:int, empty_cnt:int) -> void:
+	# 初期化.
+	init()
+	
+	# 中身あり.
+	var tbl = []
+	for j in range(fill_cnt):
+		for i in range(WaterCommon.BOX_CAPACITY_NUM):
+			tbl.append(j + 1) # 1始まり.
+	# シャッフルはしない.
+	#tbl.shuffle()
+	print(tbl)
+	
+	# 空.
+	var box:MyBox = null
+	var box_idx = 0
+	for i in range(tbl.size()):
+		var v = tbl[i]
+		box_idx = int(i / WaterCommon.BOX_CAPACITY_NUM)
+		var tile_idx = i % WaterCommon.BOX_CAPACITY_NUM
+		if tile_idx == 0:
+			# 箱を生成.
+			box = MyBox.new()
+			box.setup(box_idx)
+			_box_list.append(box)
+		
+		# タイルを生成.
+		var tile = MyTile.new()
+		tile.setup(box_idx, tile_idx, v)
+		box.push(tile)
+
+	# 空の容器を作っておく.
+	box_idx += 1
+	for i in range(empty_cnt):
+		box = MyBox.new()
+		box.setup(box_idx)
+		_box_list.append(box)
+		box_idx += 1
+	
+	var search_mode = 0 # 0: movedのみ. 1: moved以外にも置ける.
+	while true:
+		var cnt = 0
+		var src_tbl = range(count_box())
+		src_tbl.shuffle() # ランダムで開始位置を決める.
+		for i in src_tbl:
+			var src_box:MyBox = get_box(i)
+			if src_box.empty():
+				continue # 空からは移動できない.
+			if is_moved_top(i):
+				continue # 移動元にできないタイル.
+			var dst_tbl = [] # 移動先の候補.
+			for j in range(count_box()):
+				if i == j:
+					continue # 同じ位置は除外.
+				
+				var can_move = true
+				match search_mode:
+					0:
+						if is_full_box(j):
+							can_move = false # 移動先にできない箱
+						if is_empty_box(j):
+							pass # 空の箱はOK.
+						elif is_moved_top(j) == false:
+							can_move = false # 移動先にできないタイルがある.
+					1:
+						if can_push_box(j) == false:
+							can_move = false # 置けない.
+				if can_move:
+					dst_tbl.append(j) # 移動可能.
+			
+			dst_tbl.shuffle() # 移動先をランダムで決める
+			if dst_tbl.size() > 0:
+				# 移動する.
+				var dst_idx = dst_tbl[0]
+				var dst_box = get_box(dst_idx)
+				var src_tile = src_box.pop()
+				src_tile.set_moved(true) # 移動した.
+				print(to_tiles())
+				print(i, " -> ", dst_idx)
+				dst_box.push(src_tile)
+				print(to_tiles())
+				cnt += 1
+				break
+				
+		if cnt == 0:
+			match search_mode:
+				0:
+					search_mode = 1 # モード切替.
+				1:
+					break # 移動できなくなったら終了.
+
 ## 更新.
 func update(box_idx:int, data:ReplayData) -> bool:
 	var ret = false # 入れ替えできたかどうか.
@@ -226,12 +329,14 @@ func to_tiles() -> String:
 	var box_list = _get_active_box_list()
 	for box in box_list:
 		var cnt = box.count_tile()
+		ret += "["
 		for i in range(WaterCommon.BOX_CAPACITY_NUM):
 			if i >= cnt:
 				ret += "0"
 				continue
 			var tile:MyTile = box.get_tile(i)
 			ret += "%d"%tile.get_color()
+		ret += "]"
 	
 	return ret
 
@@ -492,3 +597,39 @@ func search_swap_point():
 			ret.append(d)
 	
 	return ret
+
+## 指定のタイルが移動済みかどうか.
+func check_moved_tile(box_idx:int, tile_pos:int) -> bool:
+	var tile:MyTile = get_tile(box_idx, tile_pos)
+	if tile == null:
+		return false
+	return tile.moved()
+## 指定のタイルを移動済みにする.
+func set_moved_tile(box_idx:int, tile_pos:int, b:bool) -> void:
+	var tile:MyTile = get_tile(box_idx, tile_pos)
+	if tile == null:
+		return
+	tile.set_moved(b)
+## トップのタイルが移動済みかどうか.
+func is_moved_top(box_idx:int) -> bool:
+	var box = get_box(box_idx)
+	var tile = box.top()
+	return tile.moved()
+	
+func can_push_box(box_idx:int) -> bool:
+	var box = get_box(box_idx)
+	if box == null:
+		return false
+	if box.full():
+		return false
+	return true # 一杯でなければ置ける.
+func is_full_box(box_idx:int) -> bool:
+	var box = get_box(box_idx)
+	if box == null:
+		return true
+	return box.full()
+func is_empty_box(box_idx:int) -> bool:
+	var box = get_box(box_idx)
+	if box == null:
+		return true
+	return box.empty()

@@ -37,6 +37,7 @@ var _seed:int = 0
 var _is_reset_game = true # ゲームをリセットするかどうか.
 var box_num:int = 4
 var empty_num:int = 1
+var check_resolve = true # クリア可能のチェックをするかどうか.
 
 # -----------------------------------------
 # public functions.
