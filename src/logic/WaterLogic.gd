@@ -5,6 +5,8 @@ extends Node
 # ==============================================
 #class_name WaterLogic
 
+const MAX_DEPTH = 32 # 32手が最大.
+
 ## タイルオブジェクト.
 class MyTile:
 	var _uid = 0 # ユニークID.
@@ -176,7 +178,7 @@ func create(fill_cnt:int, empty_cnt:int) -> void:
 
 	# 空の容器を作っておく.
 	box_idx += 1
-	for i in range(1):
+	for i in range(empty_cnt):
 		box = MyBox.new()
 		box.setup(box_idx)
 		_box_list.append(box)
@@ -271,6 +273,12 @@ func can_resolve() -> bool:
 
 func _can_resolve_sub(box_list, d:ReplayData, depth:int) -> bool:
 	depth += 1
+	
+	if depth > MAX_DEPTH:
+		# MAX_DEPTHを超える場合は無効とする
+		ReplayMgr.undo() # クリアできないので1つ戻す.
+		return false
+	
 	if _check_swap_box(d.src_box, d.dst_box):
 		# 交換実行.
 		var data = ReplayData.new()
@@ -278,7 +286,7 @@ func _can_resolve_sub(box_list, d:ReplayData, depth:int) -> bool:
 		data.dst_box = d.dst_box
 		data.count = _swap_box(d.src_box, d.dst_box)
 		data.tiles = to_tiles()
-		#print(depth, " ", data)
+		print(depth, " ", data)
 		
 		var dont_check = false
 		if ReplayMgr.has_same_tiles(data):

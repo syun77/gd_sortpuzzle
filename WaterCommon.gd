@@ -5,11 +5,11 @@ extends Node
 # -----------------------------------------
 const BOX_OFS_X = 128.0
 const BOX_OFS_Y = 64.0
-const BOX_W     = 80.0
+const BOX_W     = 64.0
 # タイル1つあたりのサイズ.
 const TILE_WIDTH = 40.0
 const TILE_HEIGHT = 40.0
-const TILE_MARGIN_X = 4.0
+const TILE_MARGIN_X = 2.0
 const TILE_MARGIN_Y = 20.0
 
 const TILE_IDX_EMPTY = 0 # 空とするタイル番号.
@@ -24,7 +24,7 @@ enum eColor {
 	ORANGE,
 	YELLOW,
 	GREEN,
-	LIME,
+	CADETBLUE,
 	AQUA,
 	PURPLE,
 	BLUE,
@@ -59,7 +59,7 @@ func get_tile_x(idx:int, tile_idx:int) -> float:
 	return px
 
 ## タイルの位置(Y).
-func get_tile_y(idx:int, tile_idx:int) -> float:
+func get_tile_y(idx:int, tile_idx:float) -> float:
 	var py = get_box_top(idx)
 	py += TILE_MARGIN_Y + TILE_HEIGHT * (BOX_CAPACITY_NUM - tile_idx - 1)
 	return py

@@ -42,6 +42,12 @@ WaterCommon="*res://WaterCommon.gd"
 WaterLogic="*res://src/logic/WaterLogic.gd"
 ReplayMgr="*res://src/replay/ReplayMgr.gd"
 
+[global]
+
+stack=false
+std=false
+stdout=false
+
 [gui]
 
 common/drop_mouse_on_gui_input_disabled=true
@@ -53,6 +59,11 @@ ui_click={
 "events": [ Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"button_mask":0,"position":Vector2( 0, 0 ),"global_position":Vector2( 0, 0 ),"factor":1.0,"button_index":1,"pressed":false,"doubleclick":false,"script":null)
  ]
 }
+
+[network]
+
+limits/debugger_stdout/max_chars_per_second=102400
+limits/debugger_stdout/max_messages_per_frame=102400
 
 [physics]
 

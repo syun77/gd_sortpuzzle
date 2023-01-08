@@ -39,13 +39,10 @@ func _ready() -> void:
 	WaterCommon.new_game_rnd() # 乱数を初期化.
 	# シード値を入れる.
 	_spinbox_seed.value = WaterCommon.get_seed()
-
-	WaterLogic.create(4, 1)
-	if WaterLogic.can_resolve():
-		print("[クリア可能]")
-	else:
-		print("[クリア不可能]")
-	ReplayMgr.reset()
+	
+	if _create() == false:
+		_label_caption.visible = true
+		_label_caption.text = "クリア不可能"
 	
 	# logicを元にゲームオブジェクトを生成する.
 	for i in range(WaterLogic.count_box()):
@@ -65,6 +62,31 @@ func _ready() -> void:
 		_box_list.append(box)
 		add_child(box)
 
+## 生成.
+func _create() -> bool:
+	var ret = false # クリア可能かどうか.
+	
+	# リトライ回数.
+	var cnt_retry = 10
+	for _i in range(cnt_retry):
+		# 問題を生成.
+		print("問題を生成:%d"%(_i+1))
+		WaterLogic.create(4, 1)
+		# クリア可能かどうか判定。内部でリプレイデータを使う
+		if WaterLogic.can_resolve():
+			print("[クリア可能]")
+			ret = true
+			break
+		else:
+			print("[クリア不可能]")
+		
+		# リプレイをリセット.
+		ReplayMgr.reset()
+		
+	# リプレイをリセット.
+	ReplayMgr.reset()
+	return ret
+
 ## 更新.
 func _process(delta: float) -> void:
 	match _state:
@@ -80,6 +102,9 @@ func _update_main(_delta:float) -> void:
 	if Input.is_action_just_pressed("ui_click"):
 		# 箱の選択.
 		var box_idx = _focus_box()
+		if box_idx == -1:
+			return # 選択位置に何もない.
+		
 		var data = ReplayData.new()
 		if WaterLogic.update(box_idx, data):
 			# 入れ替えできたので表示の更新が必要.
